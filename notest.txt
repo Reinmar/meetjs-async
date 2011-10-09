@@ -1,0 +1,98 @@
+Cześć, nazywam się...
+Mam nadzieję, że wszyscy już po odpowiedniej dawce piwa
+Będzie mi łatwiej mówić do zmiękczonej publiczności
+
+
+Geneza problemu (tematu).
+Uczestniczę w darmowych szkoleniach DevMeetings.
+Ostatnio w zastępstwie zostałem poproszony o poprowadzenie jednego.
+Temat middle-end - sporo Node'a.
+Organizatorzy podpowiedzieli mi, że tydzień temu powstało wielka kupa crapowatego kodu.
+Trzeba coś z tym zrobić.
+
+
+Z ciekawości...
+Domyślam się, że wszyscy coś tam programowali w JS.
+A ilu z Was korzystało z Node'a?
+
+
+Why so asynchronous?
+Całe API node'owe jest synchroniczne (poza rwSyncFile i require)
+W przegląrce jest lepiej - tylko timery, ajax, geo
+Dlaczego?
+Nieblokujące, eventowe IO
+Event-loops zamiast wątków.
+1 wątek - nie ma zmian kontekstu, nie robimy błędów
+nie zjada pamięci (apache vs nginx)
+
+
+[[Kod - krótki listing z przykładem callbacka]]
+
+
+[[Mousetrap]]
+Gdzie jest pułapka?
+
+
+[[Kod]]
+Proste pytanie. Mamy zadeklarowaną funkcję.
+Wywołujemy ją w setTimeout.
+Który z bloków catch złapie wyjątek?
+Kto jest za def... kto za call?
+
+
+[[Fail]]
+Nikt nie złapie. Wyjątek poleci w kosmos.
+Dlaczego tak się dzieje?
+Prowizoryczne rozwiązanie [[Kod - uncaughtException]]
+Konwencja - [[Kod - err jako pierwszy param]]
+
+
+[[Matryoshki]]
+załóżmy, że mamy serwis w Expressie
+przy pomocy asynchroniczengo drivera do bazy
+* pobieramy wpis po tytule
+* pobieramy komentarze do tego wpisu
+* i listę tagów...
+
+
+[[Przykładowy kod sync]]
+A jak async?
+
+
+[[Kod1.]]
+Początek wygląda podobnie
+[[Kod2.]]
+...
+
+
+Synchronizacja asynchroniczności
+
+
+[[Bruce]]
+Potrzebujemy bohatera.
+Który nas obroni przed asynchroniczną pułapką.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------
+
+
+
+http://stackoverflow.com/questions/5599024/what-so-different-about-node-jss-event-driven-cant-we-do-that-in-asp-nets-htt
+http://blog.mixu.net/2011/02/01/understanding-the-node-js-event-loop/
+http://jsconf.eu/2009/video_nodejs_by_ryan_dahl.html
+http://stackoverflow.com/questions/3629784/how-is-node-js-inherently-faster-when-it-still-relies-on-threads-internally
+http://blog.webfaction.com/a-little-holiday-present
+http://www.slideshare.net/sh1mmer/how-to-stop-writing-spaghetti-code

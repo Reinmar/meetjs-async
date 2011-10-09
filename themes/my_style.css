@@ -1,0 +1,230 @@
+.deck-container {
+	background-color: #000;
+	background-image: -moz-radial-gradient(50% 50%, circle cover, #333, #111 100%);
+	background-image: -webkit-radial-gradient(50% 50%, circle cover, #333, #111 100%);
+	background-image: -o-radial-gradient(50% 50%, circle cover, #333, #111 100%);
+	background-image: -ms-radial-gradient(50% 50%, circle cover, #333, #111 100%);
+	background-image: radial-gradient(50% 50%, circle cover, #333, #111 100%);
+	font-family: 'Corbel Regular',Arial,sans-serif !important;
+	width: 960px;
+	padding: 0px 30px;
+	color: #222;
+}
+.deck-container .slide {
+	background: none no-repeat center 80px;
+}
+.deck-container > .slide {
+	font-size: 1.25em;
+}
+.deck-container section.slide, .deck-container header.slide {
+	padding: 0px 30px;
+	background-color: rgba(255,255,255,0.95);
+	width: 840px;
+	margin: 0px auto;
+}
+
+
+.deck-container h2, .deck-container h3, 
+.csstransforms .deck-container h1, 
+.deck-container blockquote p {
+	font-family: Georgia, serif;
+	font-weight: normal;	
+}
+.deck-container h2,  .csstransforms .deck-container h1 {
+	margin-left: -30px;
+	position: relative;
+}
+.deck-container h1 {
+	background: #544061;
+	position: static;
+	display: block;
+	top: auto;
+	color: #fff;
+	font-size: 60px;
+	text-align: left;
+	padding: 120px 40px 40px !important;
+	width: 820px;
+}
+.deck-container h2 {
+	background: #544061;
+	color: #FFF;
+	border: 0px;	
+	padding: 20px 0 20px 250px;
+	font-size: 35px;
+	color: rgba(255,255,255,0.95);
+	width: 650px;
+	margin-bottom: 30px;
+}
+.deck-container h2:after, .csstransforms .deck-container h1:after {
+	content: url(../imgs/logo.png);
+	position: absolute;
+	left: 0px;
+	top: 12px;
+	display: block;
+	line-height: 0px;
+	font-size: 0px;
+}
+.deck-container h3 {
+	color: #3071BB;
+	font-size: 25px;
+	padding-bottom: 15px;
+}
+
+
+.deck-container a,
+.deck-container a:visited,
+.deck-container a:hover,
+.deck-container a:active {
+	color: #648;
+}
+
+.deck-container ul {
+	margin-left: 0em;
+}
+.deck-container li {
+	padding: 0;
+	margin-bottom: 0.5em;
+}
+.deck-container ul > li {
+	list-style-type: none;	
+}
+.deck-container ul.squared {
+	padding-left: 2em;
+}
+.deck-container ul.squared > li:before {
+	content: '';
+	background: #648;
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	float: left;
+	margin: 12px 0 0 -30px;
+}
+
+.deck-container img.as_text {
+	margin-left: 0;
+	display: inline-block;
+	vertical-align: middle;
+	margin-right: 0.5em;
+}
+.deck-container img.to_left {
+	margin-left: 0;
+}
+.deck-container img.to_right {
+	float: right;
+}
+
+.deck-container .center {
+	text-align: center;
+}
+
+.deck-container .on_img > li {
+	background: rgba(255, 255, 255, 0.9);
+	padding: 0.5em;
+}
+.deck-container .on_img > li > * {
+	margin-bottom: 0;
+}
+
+.deck-container pre,
+.deck-container code {
+	font-family: 'Monaco', monospace !important;	
+	font-size: 80% !important;
+	padding: 0;
+}
+.deck-container code {
+	color: inherit;
+	border: none;
+}
+.desc-container pre {
+	border: solid 1px #E0E0E0 !important;
+}
+.deck-container pre strong,
+.deck-container code strong {
+	text-shadow: 0 0 10px rgba(70, 50, 90, 0.5);
+}
+
+.deck-container .deck-status {
+	position: fixed;
+	bottom: 0px;
+	right: 0px;
+	padding: 10px;
+}
+.deck-container .deck-prev-link,
+.deck-container .deck-next-link {
+	background: rgba(255, 255, 255, 0.2);
+	color: #999;
+}
+.deck-container .deck-prev-link {
+	left: -20px;
+}
+.deck-container .deck-next-link {
+	right: -20px;
+}
+.deck-container blockquote  {
+	overflow: hidden;
+	position: relative;	
+	border: 0px;
+	padding: 50px 40px 20px 120px;
+}
+.deck-container blockquote p {
+	position: relative;
+	z-index: 10;	
+}
+.deck-container blockquote p:first-child {
+	font-size: 32px;
+}
+.deck-container blockquote:before {
+	content: '❞';
+	position: absolute;
+	font-size: 300px;
+	line-height: 0px;
+	color: #e8e8e8;
+	left: -15px;
+	top: 130px;
+	font-style: normal;
+	z-index: 9;
+}
+.deck-container blockquote cite {
+	font-weight: normal;
+	line-height: 30px;
+	margin-top: 30px;
+	display: block;
+	font-size: 18px;
+}
+
+.syntaxhighlighter table {
+	overflow: hidden !important;	
+}
+.syntaxhighlighter .line.alt1, .syntaxhighlighter .line.alt2 {
+	background-color: transparent !important;
+}
+.syntaxhighlighter {
+	overflow: auto;
+	vertical-align: top !important;
+	margin: 0 !important;
+	display: inline-block;
+	background-color: transparent !important;
+	padding: 0 !important;
+	border: solid 1px #E0E0E0 !important;
+}
+section.slide > div > .syntaxhighlighter {
+	margin-bottom: 1em !important;
+}
+pre .mess {
+	opacity: 0.25;
+}
+
+#why-so-asynchronous {
+	background-image: url('../imgs/why_so.jpg');
+}
+#bruce {
+	background-image: url('../imgs/bruce.jpg');
+}
+.deck-container p.author {
+	padding: 0px;
+	position: absolute;
+	right: 1em;
+	bottom: 1em;
+	margin: 0;
+}

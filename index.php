@@ -1,0 +1,733 @@
+<?
+
+function f($c) {
+	return htmlspecialchars(
+		preg_replace('/(^\n|\n$)/', '',
+			str_replace("\t", '    ', $c)
+		)
+	);
+}
+
+?><!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Asynchroniczna pułapka &ndash; MeetJS</title>
+	<meta name="viewport" content="width=1024, user-scalable=no">
+	<link rel="stylesheet" href="deck.core.css">
+	<link rel="stylesheet" href="themes/style/swiss.css">
+	<link rel="stylesheet" href="extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" href="extensions/status/deck.status.css">
+	<link rel="stylesheet" href="extensions/hash/deck.hash.css">
+	<link rel="stylesheet" href="sh/styles/shCore.css">
+	<link rel="stylesheet" href="sh/styles/shThemeDefault.css">
+	<link rel="stylesheet" href="themes/my_style.css">
+</head>
+<body class="deck-container">
+
+	<header class="slide" id="intro">
+		<h1>Asynchroniczna pułapka</h1>
+		<img src="imgs/trap.jpg" alt="pułapka" height="420">
+		<p class="author">(Piotrek Koszuliński; @reinmarpl; <a href="http://code42.pl">http://code42.pl</a>) @ MeetJS</p>
+	</header>
+
+	<section class="slide">
+		<h2>Geneza tematu</h2>
+		<ul>
+			<li>
+				<a href="http://devmeetings.pl"><img src="imgs/dmlogo.png" alt="DevMeetings" class="as_text"></a>
+				bezpłatne warsztaty dla developerów
+			</li>
+			<li class="slide">
+				<img src="imgs/crappy_js.jpg" alt="Crappy JS" height="500" class="to_right">
+				doświadczeni programiści,<br>
+				a kod w NodeJS na poziomie...
+			</li>
+			<li class="slide">
+				dlaczego?
+			</li>
+		</ul>
+	</section>
+
+	<section class="slide" id="why-so-asynchronous">
+		<h2>Dlaczego?</h2>
+		<ul class="on_img">
+			<li class="slide">całe API jest asynchroniczne (3 wyjątki &ndash; <code>require, fs.writeFileSync, fs.readFileSync</code>)</li>
+			<li class="slide">zupełnie na odwrót niż w CSJS</li>
+			<li class="slide">
+<pre><?= f("
+fs.readFile('sth.json', function (err, data) {
+	if (err) return console.log('ups!');
+	console.log(data);
+});
+") ?></pre>
+			</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h2>Gdzie ta pułapka?</h2>
+		<img src="imgs/caution_bananas.png" alt="caution bananas!" height="500">
+	</section>
+
+	<section class="slide">
+		<h2>Złap errora &ndash; <code>def</code> czy <code>call</code>?</h2>
+<pre><?= f("
+try {
+	var fn = function () {
+		throw new Error();
+	};
+}
+catch (err) {
+	console.log('def', err);
+}
+
+try {
+	setTimeout(fn, 1);
+}
+catch (err) {
+	console.log('call', err);
+}
+") ?></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Ups!</h2>
+		<img src="imgs/baseball_fail2.jpg" alt="baseball fail">
+		<p class="center">dziurawy catch...</p>
+	</section>
+
+	<section class="slide">
+		<h2>Ups!</h2>
+		<img src="imgs/baseball_fail3.jpg" alt="baseball fail" height="500">
+		<p class="center">...wywala nam serwer...</p>
+	</section>
+
+	<section class="slide">
+		<h2>Ups!</h2>
+		<img src="imgs/baseball_fail.jpg" alt="baseball fail">
+<pre><?= f("
+process.on('uncaughtException', function (err) {
+	console.log('ups', err);
+});
+") ?></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Ups!</h2>
+		<img src="imgs/baseball_fail4.jpg" alt="baseball fail">
+		<p class="center">Node'owa konwencja: <code>fs.writeFile('sth', function (<strong>err</strong>, result) {});</code></p>
+	</section>
+
+	<section class="slide">
+		<h2>Incepcja</h2>
+		<ul class="squared">
+			<li>załóżmy, że tworzymy stronę w Expressie</li>
+			<li>pobieramy z bazy artykuł po tytule</li>
+			<li>pobieramy do niego komentarze</li>
+			<li>i listę tagów</li>
+			<li>to proste!</li>
+		</ul>
+		<img src="imgs/inception.png" alt="presidents as russian nested dolls" height="300" class="slide">
+	</section>
+
+	<section class="slide">
+		<h2>Incepcja</h2>
+		<p>Synchroniczne API:</p>	
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	var post = db.getPostByTitle(req.params.title);
+	var comments = post.getComments();
+	var tags = post.getTags();
+
+	res.render({
+		post: post,
+		comments: comments,
+		tags: tags
+	});
+});
+") ?></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Incepcja</h2>
+		<p>Asynchroniczne API:</p>
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	db.getPostByTitle(req.params.title, function (err, post) {
+		post.getComments(function (err, comments) {
+			post.getTags(function (err, tags) {
+				res.render({
+					post: post,
+					comments: comments,
+					tags: tags
+				});
+			})
+		});
+	});
+});
+") ?></pre>
+		<img src="imgs/inception2.png" alt="presidents as russian nested dolls" height="180">
+	</section>
+
+	<section class="slide">
+		<h2>Incepcja &ndash; wyjątki</h2>
+		<p>Synchroniczne API:</p>	
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	try {
+		var post = db.getPostByTitle(req.params.title);
+		var comments = post.getComments();
+		var tags = post.getTags();
+
+		res.render({
+			post: post,
+			comments: comments,
+			tags: tags
+		});
+	}
+	catch (err) {
+		res.render500(err);
+	}
+});
+") ?></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Incepcja &ndash; wyjątki</h2>
+		<p>Asynchroniczne API:</p>
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	db.getPostByTitle(req.params.title, function (err, post) {
+		if (err) return res.render500(err);
+		post.getComments(function (err, comments) {
+			if (err) return res.render500(err);
+			post.getTags(function (err, tags) {
+				if (err) return res.render500(err);
+				res.render({
+					post: post,
+					comments: comments,
+					tags: tags
+				});
+			})
+		});
+	});
+});
+") ?></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Synchronizacja</h2>
+		<p>Konkatenacja plików w katalogu:</p>
+		<ol>
+			<li>odczytanie listy plików w katalogu</li>
+			<li>odczytanie zawartości każdego z plików</li>
+			<li><strong>synchronizacja callbacków!</strong></li>
+			<li>połączenie zawartości</li>
+			<li>zapisanie pliku wynikowego</li>
+		</ol>
+	</section>
+
+	<section class="slide">
+		<h2>Synchronizacja</h2>
+<pre class="nohl">fs.readdir(__dirname, function (err, names) {
+    var l = names.length, opened = 0, content = [];
+    names.forEach(function (name, i) {
+        fs.readFile(name, 'utf-8', function (err, c) {
+            content[i] = c;
+            if (++opened === l) write();
+        });
+    });
+    var write = function () {
+        fs.writeFile('lib.js', content.join("\n"), function (err) {
+            console.log('done');
+        });
+    };
+});</pre>
+	</section>
+
+	<section class="slide">
+		<h2>Synchronizacja</h2>
+<pre class="nohl">fs.readdir(__dirname<span class="mess">, function (err, names) {
+    var l = names.length, opened = 0,</span> content = [];
+    names.forEach(function (name, i) {
+        fs.readFile(name, 'utf-8'<span class="mess">, function (err, c) {</span>
+            content[i] = c;
+            <span class="mess">if (++opened === l) write();
+        });
+    });
+    var write = function () {</span>
+        fs.writeFile('lib.js', content.join("\n")<span class="mess">, function (err) {</span>
+            console.log('done');
+        <span class="mess">});
+    };
+});</span></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Kto nas uratuje z pułapki?</h2>
+		<p>Ktoś kto...</p>
+		<ul class="squared">
+			<li>obsłuży błędy</li>
+			<li>zsynchronizuje asynchroniczne callbacki</li>
+			<li>zlikwiduje zagnieżdżenia</li>
+			<li>skróci kod</li>
+		</ul>
+	</section>
+
+	<section class="slide" id="bruce">
+		<h2>Bruce!</h2>
+		<ul class="slide on_img">
+			<li>
+				<ul class="squared">
+					<li>https://github.com/caolan/async</li>
+					<li>https://github.com/medikoo/deferred</li>
+					<li>https://github.com/kriskowal/q</li>
+					<li>https://github.com/creationix/step</li>
+					<li>https://github.com/willconant/flow-js</li>
+					<li>https://github.com/fjakobs/async.js</li>
+					<li>https://github.com/kriszyp/node-promise</li>
+					<li>https://github.com/laverdet/node-fibers</li>
+					<li>... itd., itp.</li>
+				</ul>
+			</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h2>Async</h2>
+		<ul class="squared">
+			<li><code>series(tasks, [callback])</code> &ndash; Run an array of functions in series, each one running once the previous function has completed.</li>
+			<li><code>parallel(tasks, [callback])</code> &ndash; Run an array of functions in parallel, without waiting until the previous function has completed.</li>
+			<li><code>waterfall(tasks, [callback])</code> &ndash; Runs an array of functions in series, each passing their results to the next in the array.</li>
+			<li>i wiele innych</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+	<h2>Async</h2>
+<pre><?= f("
+async.parallel([
+    function(callback){
+        setTimeout(function () {
+            callback(null, 'one');
+        }, 200);
+    },
+    function(callback){
+        setTimeout(function () {
+            callback(null, 'two');
+        }, 100);
+    },
+],
+function (err, results) {
+	results; // -> ['two', 'one']
+});
+") ?></pre>
+	</section>
+
+	<section class="slide">
+	<h2>Async</h2>
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	async.waterfall([
+		db.getPostByTitle.bind(db, req.params.title),
+		function (post, callback) {
+			async.parallel({
+				c: post.getComments.bind(post),
+				t: post.getTags.bind(post)
+			},
+			function (err, results) {
+				callback(err, post, results.c, results.t);
+			});
+		}
+	],
+	function (err, post, comments, tags) {
+		if (err) return res.render500(err);
+		res.render({ ... });
+	});
+});
+") ?></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+
+		<p>Załóżmy, że mamy asynchroniczną funkcję:</p>
+
+<pre><?= f("
+var oneOneSecondLater = function (callback) {
+    setTimeout(function () {
+        callback(1);
+    }, 1000);
+};
+
+oneOneSecondLater(function (v) { console.log(v); });
+") ?></pre>
+		
+		<ul class="slide squared">
+			<li>musimy zagnieżdżać wywołania</li>
+			<li>nie możemy przekazać "stanu odroczenia" jako wartości</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+
+		<p>Spróbujmy inaczej:</p>
+
+<pre><?= f("
+var maybeOneOneSecondLater = function () {
+    var callback;
+    setTimeout(function () {
+        callback(1);
+    }, 1000);
+    return {
+        then: function (_callback) {
+            callback = _callback;
+        }
+    };
+};
+
+maybeOneOneSecondLater().then(function (v) {
+	console.log(v);
+});
+") ?></pre>
+
+		<p class="slide">całość rozmyślań u Krisa Kowala (https://github.com/kriskowal/q/blob/master/design/README.js)</p>
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+		<ul class="squared">
+			<li>https://github.com/medikoo/deferred</li>
+			<li>made in Poland</li>
+			<li>zainspirowany przez implementację Krisa Kowala i innych</li>
+			<li>ciekawie współpracuje z es5-ext (https://github.com/medikoo/es5-ext)</li>
+			<li>kod wykorzystujący deferred i es5-ext przestaje przypominać JavaScript (to plus, czy minus?)</li>
+			<li class="slide">
+<pre><?= f("
+a2p(fs.readFile, __filename, 'utf-8')
+(invoke('toUpperCase'))
+(console.log)
+.end();
+") ?></pre>
+			</li>
+			<li class="slide">:|</li>
+		</ul>
+
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+
+<pre><?= f("
+var later = function () {
+	var d = deferred();
+	setTimeout(function () {
+		d.resolve(1);
+	}, 1000);
+	return d.promise;
+};
+
+later().then(function (n) {
+	console.log(n); // 1
+});
+") ?></pre>
+
+	<p class="slide">Ale <code>promise</code>, to tak naprawdę <code>then</code>, więc prościej:</p>
+
+<div class="slide"><pre><?= f("
+later()
+(function (n) {
+    console.log(n); // 1
+});
+") ?></pre></div>
+
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+
+		<ul class="squared">
+			<li>series/waterfall:
+<pre><?= f("
+later()
+(function (n) {
+	return n + 1;
+})
+(function (n) {
+	console.log(n); // 2
+});
+") ?></pre>
+			</li>
+			<li class="slide">waterfall/series &ndash; <code>all(...)</code>:
+<pre><?= f("
+all(p1, p2, p3)
+(function (results) {
+    // results is array of resolved values of p1, p2 and p3.
+});
+") ?></pre>
+			</li>
+			<li class="slide">parallel &ndash; <code>join(...)</code>:
+<pre><?= f("
+join(p1, p2, p3)
+(function (results) {
+    // results is array of resolved values of p1, p2 and p3.
+});
+") ?></pre>
+			</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+
+		<ul class="squared">
+			<li>async to promise:
+<pre><?= f("
+var a2p = deferred.asyncToPromise.call,
+	ba2p = deferred.asyncToPromise.bind;
+
+a2p(fs.readFile, __filename, 'utf-8')
+(function (content) {
+	// change content
+	return content;
+})
+(ba2p(fs.writeFile, __filename + '.changed'));
+") ?></pre>
+			</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+
+		<ul class="squared">
+			<li>obsługa błędów:
+<pre><?= f("
+later()(function (n) { throw new Error('error!'); })
+(function () {
+    // never called
+}, function (err) {
+    // handle error
+});
+") ?></pre>
+			</li>
+			<li class="slide">bądź:
+<pre><?= f("
+later()(function (n) { throw new Error('error!'); })
+.end(function (err) {
+    // handle error
+});
+") ?></pre>
+			</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+		<p>Konkatenacja plików w katalogu:</p>
+
+<pre><?= f("
+all(
+    // Read all filenames in given path
+    a2p(fs.readdir, __dirname),
+    // Read files content
+    function (files) {
+        return join(files.map(function (name) {
+            return a2p(fs.readFile, name, 'utf-8');
+        }));
+    },
+    // Concat into one string
+    function (data) {
+        return data.join(\"\\n\");
+    },
+    // Write to lib.js
+    ba2p(fs.writeFile, __dirname + '/lib.js')
+).end();
+") ?></pre>
+
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+		<p>W skrócie:</p>
+
+<pre><?= f("
+all(
+    a2p(fs.readdir, __dirname),
+    invoke('map', function (name) {
+        return a2p(fs.readFile, name, 'utf-8');
+    }), join,
+    invoke('join', \"\\n\"),
+    ba2p(fs.writeFile, __dirname + '/lib.js')
+).end();
+") ?></pre>
+
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	a2p(db.getPostByTitle.bind(db), req.params.title)
+	(function (post) {
+		return all(
+			post,
+			a2p(post.getComments.bind(post)),
+			a2p(post.getTags.bind(post))
+		);
+	})
+	(function (args) {
+		res.render({
+			post: args[0],
+			comments: args[1],
+			tags: args[2]
+		});
+	})
+	.end(function (err) {
+		res.render500(err);
+	});
+});
+") ?></pre>
+
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+		<p>Bądź gdybyśmy korzystali z deferred również w bazie:</p>
+
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	db.getPostByTitle(req.params.title)
+	(function (post) {
+		return all(
+			post, post.getComments(), post.getTags()
+		);
+	})
+	(function (args) {
+		res.render({
+			post: args[0],
+			comments: args[1],
+			tags: args[2]
+		});
+	})
+	.end(function (err) {
+		res.render500(err);
+	});
+});
+") ?></pre>
+
+	</section>
+
+	<section class="slide">
+		<h2>Deferred i promise'y</h2>
+		<p>Porównanie z synchronicznym API:</p>	
+<pre><?= f("
+app.get('/post/:title', function (req, res) {
+	try {
+		var post = db.getPostByTitle(req.params.title);
+		var comments = post.getComments();
+		var tags = post.getTags();
+
+		res.render({
+			post: post,
+			comments: comments,
+			tags: tags
+		});
+	}
+	catch (err) {
+		res.render500(err);
+	}
+});
+") ?></pre>
+	</section>
+
+	<section class="slide">
+		<h2>Async czy deferred czy ...?</h2>
+		<img src="imgs/uncle_sam.png" alt="uncle sam" height="500">
+	</section>
+
+	<section class="slide">
+		<h2>Debugowanie</h2>
+		<ul class="squared">
+			<li class="slide">gdzie wystąpił błąd?
+<pre><?= f("
+> (function () { throw new Error('Ratunku'); }());
+Error: Ratunku
+    at repl:1:22
+    at repl:1:44
+    at REPLServer.eval (repl.js:80:28)
+") ?></pre>
+			</li>
+			<li class="slide">łatwiej z NFE (named function expression):
+<pre><?= f("
+> (function fn() { throw new Error('Ratunku'); }());
+Error: Ratunku
+    at fn (repl:1:24)
+    at repl:1:46
+    at REPLServer.eval (repl.js:80:28)
+") ?></pre>
+			</li>
+			<li class="slide">nie mylić NFE z FD (function declaration): http://code42.pl/2011/08/20/co-lepiej-wiedziec-o-javascriptcie-cz-2-hoisting-deklaracje-funkcji-i-wyrazenia-funkcyjne/</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h2>Rozterki na przyszłość</h2>
+		<ul class="squared">
+			<li>debugowanie</li>
+			<li class="slide">jeden standard</li>
+			<li class="slide">edukacja developerów</li>
+		</ul>
+	</section>
+
+	<section class="slide">
+		<h1>Pytania?</h1>
+	</section>
+
+	<!--
+	<section class="slide">
+		<h2></h2>
+		<ul>
+			<li></li>
+		</ul>
+	</section>
+
+<pre><?= f("
+") ?></pre>
+
+	-->
+
+	<a href="." class="deck-permalink" title="Permalink to this slide">#</a>
+	<a href="#" class="deck-prev-link" title="Previous">&#8592;</a>
+	<a href="#" class="deck-next-link" title="Next">&#8594;</a>
+
+	<p class="deck-status">
+		<span class="deck-status-current"></span>
+		/
+		<span class="deck-status-total"></span>
+	</p>
+
+
+	<script src="jquery-1.6.4.min.js"></script>
+	<script src="modernizr.custom.js"></script>
+	<script src="sh/scripts/shCore.js"></script>
+	<script src="sh/scripts/shBrushJScript.js"></script>
+	<script src="deck.core.js"></script>
+	<script src="extensions/menu/deck.menu.js"></script>
+	<script src="extensions/goto/deck.goto.js"></script>
+	<script src="extensions/status/deck.status.js"></script>
+	<script src="extensions/navigation/deck.navigation.js"></script>
+	<script src="extensions/hash/deck.hash.js"></script>
+	<script>
+		$(function() {
+			$.deck('.slide');
+			$('pre:not(.nohl)').addClass('brush: js');
+			SyntaxHighlighter.defaults.gutter = false;
+			SyntaxHighlighter.defaults.toolbar = false;
+			SyntaxHighlighter.all();
+		});
+	</script>
+</body>
+</html>
