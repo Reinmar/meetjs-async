@@ -28,7 +28,7 @@ function f($c) {
 	<header class="slide" id="intro">
 		<h1>Asynchroniczna pułapka</h1>
 		<img src="imgs/trap.jpg" alt="pułapka" height="420">
-		<p class="author">(Piotrek Koszuliński; @reinmarpl; <a href="http://code42.pl">http://code42.pl</a>) @ MeetJS</p>
+		<p class="author">(Piotrek Koszuliński; <a href="http://twitter.com/#!/reinmarpl">@reinmarpl</a>; <a href="http://code42.pl">http://code42.pl</a>) @ <a href="http://meetjs.pl">MeetJS</a></p>
 	</header>
 
 	<section class="slide">
